@@ -1,6 +1,6 @@
 'use server'
 
-export type AnalysisType = 'emotion' | 'fatigue' | 'gender' | 'description' | 'accessories' | 'gaze' | 'hair' | 'crowd' | 'general' | 'hydration' | 'item_extraction'
+export type AnalysisType = 'emotion' | 'fatigue' | 'gender' | 'description' | 'accessories' | 'gaze' | 'hair' | 'crowd' | 'general' | 'hydration' | 'item_extraction' | 'text_detection'
 
 const ANALYSIS_PROMPTS: Record<AnalysisType, string> = {
   hydration: `Analyze facial indicators of hydration levels. Look for:
@@ -40,14 +40,22 @@ Summarize the overall gaze patterns and interactions between people.`,
   {
     "items": [
       {
-        "name": "Item name/description",
-        "quantity": "Numeric quantity",
-        "unit_price": "Price per unit in numeric format"
+        "name": "Name or description of the item",
+        "quantity": "Number of items (if applicable)",
+        "price": "Price in any format (if shown)",
+        "details": "Any additional details about the item",
+        "location": "Where the item appears in the image"
       }
     ]
   }
   
-  Avoid pareidolia. Do not hallucinate or make up information that is not present in the image. If any information is unclear or not visible, return null for that field.`
+  Avoid pareidolia. Do not hallucinate or make up information that is not present in the image. If any information is unclear or not visible, return null for that field.`,
+  text_detection: `Analyze and extract all text and numbers visible in the image, you only focus on text or numbers, Only return the text and numbers that are clearly visible in the image, if there is no text or numbers, return as NO TEXT OR NUMBERS FOUND.
+
+
+
+  Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the image. If any feature is unclear or not visible, state that it cannot be determined.
+  `
 }
 
 // Cache for storing recent analysis results

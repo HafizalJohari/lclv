@@ -27,7 +27,8 @@ const ANALYSIS_LABELS = {
   accessories: 'Accessories Detection',
   gaze: 'Gaze Detection',
   hair: 'Hair Analysis',
-  crowd: 'Crowd Analysis'
+  crowd: 'Crowd Analysis',
+  text_detection: 'Text Detection'
 } as const
 
 const ANALYSIS_COLORS = {
@@ -40,7 +41,8 @@ const ANALYSIS_COLORS = {
   accessories: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
   gaze: 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20',
   hair: 'bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20',
-  crowd: 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'
+  crowd: 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20',
+  text_detection: 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20'
 } as const
 
 function CurrentTime() {

@@ -87,6 +87,11 @@ const ANALYSIS_OPTIONS = [
     value: 'crowd',
     label: 'Crowd Analysis',
     description: 'Analyze group size, demographics, and behavior'
+  },
+  {
+    value: 'text_detection',
+    label: 'Text Detection',
+    description: 'Detect and extract text, numbers, and characters from images'
   }
 ] as const
 

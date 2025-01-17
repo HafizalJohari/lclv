@@ -9,6 +9,22 @@ import {
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Info, Cpu, Lock, Sparkles } from "lucide-react"
+import { AnalysisType } from "@/app/actions/process-image"
+
+const analysisOptions: { label: string; value: AnalysisType }[] = [
+  { label: "Emotion Analysis", value: "emotion" },
+  { label: "Fatigue Detection", value: "fatigue" },
+  { label: "Gender Analysis", value: "gender" },
+  { label: "Description", value: "description" },
+  { label: "Accessories", value: "accessories" },
+  { label: "Gaze Analysis", value: "gaze" },
+  { label: "Hair Analysis", value: "hair" },
+  { label: "Crowd Analysis", value: "crowd" },
+  { label: "General Analysis", value: "general" },
+  { label: "Hydration Analysis", value: "hydration" },
+  { label: "Item Extraction", value: "item_extraction" },
+  { label: "Text Detection", value: "text_detection" },
+]
 
 export function InfoSection() {
   return (
@@ -80,6 +96,11 @@ export function InfoSection() {
                   title: "Crowd Analysis",
                   description: "Analyzes group size, demographics, engagement levels, and behavioral patterns",
                   color: "bg-rose-500/10 text-rose-500"
+                },
+                {
+                  title: "Text Detection",
+                  description: "Identifies and extracts text, numbers, and alphanumeric sequences from images",
+                  color: "bg-teal-500/10 text-teal-500"
                 }
               ].map((feature, index) => (
                 <div key={index} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
