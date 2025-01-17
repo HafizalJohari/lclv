@@ -2,6 +2,10 @@
 
 This project is a real-time computer vision application built with Next.js and TailwindCSS that leverages the Moondream AI model for advanced visual analysis. Here's how it works:
 
+
+![Screenshot 2025-01-17 at 8 38 10 AM](https://github.com/user-attachments/assets/193ff854-8130-4ff2-8751-96447c1b1fe3)
+
+
 ## Core Features
 
 ### 1. Real-Time Camera Analysis
