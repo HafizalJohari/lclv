@@ -84,6 +84,10 @@ Step 2:
 Clone the repo and run the app from https://github.com/HafizalJohari/lclv.git
 
 ```
+git clone https://github.com/HafizalJohari/lclv.git
+```
+Then
+```
 cd lclv
 npm install
 npm run dev
