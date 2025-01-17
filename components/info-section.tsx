@@ -23,7 +23,7 @@ const analysisOptions: { label: string; value: AnalysisType }[] = [
   { label: "General Analysis", value: "general" },
   { label: "Hydration Analysis", value: "hydration" },
   { label: "Item Extraction", value: "item_extraction" },
-  { label: "Text Detection", value: "text_detection" },
+  { label: "Character Detection", value: "text_detection" },
 ]
 
 export function InfoSection() {
@@ -98,7 +98,7 @@ export function InfoSection() {
                   color: "bg-rose-500/10 text-rose-500"
                 },
                 {
-                  title: "Text Detection",
+                  title: "Character Detection",
                   description: "Identifies and extracts text, numbers, and alphanumeric sequences from images",
                   color: "bg-teal-500/10 text-teal-500"
                 }

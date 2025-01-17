@@ -28,7 +28,7 @@ const ANALYSIS_LABELS = {
   gaze: 'Gaze Detection',
   hair: 'Hair Analysis',
   crowd: 'Crowd Analysis',
-  text_detection: 'Text Detection'
+  text_detection: 'Character Detection'
 } as const
 
 const ANALYSIS_COLORS = {

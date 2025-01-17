@@ -90,7 +90,7 @@ const ANALYSIS_OPTIONS = [
   },
   {
     value: 'text_detection',
-    label: 'Text Detection',
+    label: 'Character Detection',
     description: 'Detect and extract text, numbers, and characters from images'
   }
 ] as const
