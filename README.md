@@ -58,6 +58,7 @@ The app can analyze various aspects of the video feed:
 
 The application provides a comprehensive suite of computer vision analysis tools while maintaining privacy and performance by running everything locally on the user's machine.
 
+https://github.com/vikhyat/moondream.git
 ## Running Moondream with Ollama
 
 ### Prerequisites
@@ -73,13 +74,15 @@ The application provides a comprehensive suite of computer vision analysis tools
 
 Make sure you run moondrean in ollama locally.
 
-### Next:
 
+
+Step 2:
 Clone the repo and run the app from https://github.com/HafizalJohari/lclv.git
 
+```
 cd lclv
 npm install
 npm run dev
+```
 
 Thats it!
-    
