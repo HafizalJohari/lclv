@@ -131,7 +131,6 @@ export function InfoSection() {
                   <li>• Secure local processing (no cloud services)</li>
                   <li>• Smart result caching for better performance</li>
                   <li>• Parallel analysis processing</li>
-                  <li>• Interactive chat with AI about observations</li>
                   <li>• Multiple analysis types with customizable intervals</li>
                   <li>• Visual overlays for gaze detection</li>
                 </ul>
