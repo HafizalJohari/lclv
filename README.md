@@ -57,3 +57,29 @@ The app can analyze various aspects of the video feed:
 6. Results can be interacted with through the UI
 
 The application provides a comprehensive suite of computer vision analysis tools while maintaining privacy and performance by running everything locally on the user's machine.
+
+## Running Moondream with Ollama
+
+### Prerequisites
+1. Install Ollama from https://ollama.ai
+2. Ensure you have at least 4GB of available RAM
+3. Have a working internet connection for initial model download
+
+### Installation Steps
+
+1. First, pull the Moondream model using Ollama:
+2. `ollama pull moondream`
+3. `ollama run moondream`
+
+Make sure you run moondrean in ollama locally.
+
+### Next:
+
+Clone the repo and run the app from https://github.com/HafizalJohari/lclv.git
+
+cd lclv
+npm install
+npm run dev
+
+Thats it!
+    
