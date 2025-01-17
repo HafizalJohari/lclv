@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Local Computer Vision (LCLV) Project
 
-## Getting Started
+This project is a real-time computer vision application built with Next.js and TailwindCSS that leverages the Moondream AI model for advanced visual analysis. Here's how it works:
 
-First, run the development server:
+## Core Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 1. Real-Time Camera Analysis
+- Captures live video feed from the user's camera
+- Processes frames at configurable intervals (1-10 seconds or live)
+- Uses HTML5 Canvas for drawing overlays and visualizations
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Multiple Analysis Types
+The app can analyze various aspects of the video feed:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **General Analysis**: Overall scene interpretation and context
+- **Emotion Detection**: Facial expression and emotional state analysis
+- **Fatigue Analysis**: Signs of tiredness using facial indicators
+- **Gender Presentation**: Analysis of apparent gender presentation
+- **Person Description**: Detailed physical characteristics
+- **Accessories**: Detection of worn items and accessories
+- **Gaze Analysis**: Eye tracking and attention direction
+- **Hair Analysis**: Detailed hair characteristics assessment
+- **Crowd Analysis**: Group dynamics and demographic patterns
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Technical Implementation
+- Uses Moondream AI model running locally via Ollama
+- Implements caching system for recent analyses (5-second cache)
+- Features retry mechanism with exponential backoff
+- Supports multiple face detection and tracking
+- Real-time visualization of gaze directions and connections
 
-## Learn More
+### 4. User Interface
+- Clean, modern interface using TailwindCSS
+- Responsive design that works across devices
+- Interactive controls for analysis type selection
+- Adjustable time intervals for analysis frequency
+- Real-time feedback and visualization overlays
 
-To learn more about Next.js, take a look at the following resources:
+### 5. Performance Features
+- Efficient frame processing
+- Request debouncing to prevent overload
+- Smooth rendering using requestAnimationFrame
+- Automatic resizing and responsive canvas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 6. Privacy-Focused
+- All processing happens locally on the user's machine
+- No data sent to external servers
+- No image storage or persistence
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How It Works
 
-## Deploy on Vercel
+1. The camera feed is captured using the `getUserMedia` API
+2. Frames are processed at the selected interval
+3. The image data is sent to the local Moondream model via Ollama
+4. Analysis results are processed and displayed in real-time
+5. Visual overlays are drawn on the canvas for features like gaze tracking
+6. Results can be interacted with through the UI
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application provides a comprehensive suite of computer vision analysis tools while maintaining privacy and performance by running everything locally on the user's machine.
