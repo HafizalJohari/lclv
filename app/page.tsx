@@ -71,7 +71,7 @@ export default function Home() {
             <Tabs defaultValue="camera" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="camera">Camera</TabsTrigger>
-                <TabsTrigger value="upload">Upload Image</TabsTrigger>
+                <TabsTrigger value="upload">Upload Media</TabsTrigger>
               </TabsList>
               <TabsContent value="camera">
                 <CameraComponent

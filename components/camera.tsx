@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Camera, StopCircle, Loader2, Clock, AlertCircle, Eye } from 'lucide-react'
 import { captureVideoFrame } from '@/utils/camera'
-import { AnalysisType } from '@/app/actions/process-image'
+import type { AnalysisType } from '@/app/actions/process-image'
 import {
   Select,
   SelectContent,
@@ -15,6 +15,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { detectGaze } from '@/app/utils/gaze-detection'
+import { VideoUpload } from '@/components/video-upload'
 
 interface CameraProps {
   onFrame: (imageData: string, analysisTypes: AnalysisType[]) => void
@@ -24,17 +26,25 @@ interface CameraProps {
 
 interface EyeGazeData {
   gazeDirection: string;
-  faces: {
+  faces: Array<{
     x: number;
     y: number;
     width: number;
     height: number;
-  }[];
-  connections: {
-    from: number;
-    to: number;
-    color: string;
-  }[];
+    eyePoints?: Array<{
+      x: number;
+      y: number;
+      confidence: number;
+    }>;
+  }>;
+  confidence: number;
+}
+
+interface HydrationData {
+  hydrationLevel: number;
+  indicators: string[];
+  advice: string;
+  confidence: 'high' | 'medium' | 'low';
 }
 
 const ANALYSIS_OPTIONS = [
@@ -106,15 +116,7 @@ const TIME_INTERVALS = {
 
 type TimeInterval = keyof typeof TIME_INTERVALS
 
-// Add hydration data interface
-interface HydrationData {
-  hydrationLevel: number;
-  indicators: string[];
-  advice: string;
-  confidence: 'high' | 'medium' | 'low';
-}
-
-export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: CameraProps) {
+export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: CameraProps): JSX.Element {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isStreaming, setIsStreaming] = useState(false)
@@ -153,8 +155,8 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'user',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 720 },
+          height: { ideal: 480 }
         } 
       })
       if (videoRef.current) {
@@ -245,79 +247,43 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
 
   // Function to draw bounding boxes and gaze indicators
   const drawBoundingBoxes = () => {
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    if (!canvas || !video) return
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx || !eyeGazeData) return;
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Get the actual displayed dimensions of the video
-    const videoRect = video.getBoundingClientRect()
-    
-    // Set canvas size to match displayed video size
-    canvas.width = videoRect.width
-    canvas.height = videoRect.height
+    eyeGazeData.faces.forEach((face, index) => {
+      // Draw face box
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(face.x, face.y, face.width, face.height);
 
-    // Clear previous drawings
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    // Draw gaze detection elements if available
-    if (eyeGazeData) {
-      // Draw connections first (so they appear behind boxes)
-      if (eyeGazeData.connections) {
-        eyeGazeData.connections.forEach(connection => {
-          const fromFace = eyeGazeData.faces[connection.from]
-          const toFace = eyeGazeData.faces[connection.to]
-          
-          if (fromFace && toFace) {
-            ctx.beginPath()
-            ctx.strokeStyle = connection.color
-            ctx.lineWidth = 2
-            // Start from the center of the face boxes
-            ctx.moveTo(
-              fromFace.x + fromFace.width / 2,
-              fromFace.y + fromFace.height / 2
-            )
-            ctx.lineTo(
-              toFace.x + toFace.width / 2,
-              toFace.y + toFace.height / 2
-            )
-            ctx.stroke()
-          }
-        })
+      // Draw eye points if available
+      if (face.eyePoints) {
+        face.eyePoints.forEach(point => {
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+          ctx.fillStyle = '#10B981';
+          ctx.fill();
+        });
       }
 
-      // Draw face boxes
-      if (eyeGazeData.faces) {
-        eyeGazeData.faces.forEach((face, index) => {
-          // Draw face bounding box
-          ctx.strokeStyle = '#10B981' // Emerald green
-          ctx.lineWidth = 2
-          ctx.strokeRect(face.x, face.y, face.width, face.height)
+      // Add face label
+      ctx.font = '14px system-ui';
+      ctx.fillStyle = '#10B981';
+      ctx.fillText(`Face ${index + 1}`, face.x, face.y - 5);
+    });
 
-          // Add subtle background to the box
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.1)'
-          ctx.fillRect(face.x, face.y, face.width, face.height)
-
-          // Add face index label
-          ctx.font = '14px system-ui'
-          ctx.fillStyle = '#10B981'
-          ctx.fillText(`Face ${index + 1}`, face.x + 4, face.y - 6)
-        })
-      }
-
-      // Add gaze direction indicator
-      ctx.font = '14px system-ui'
-      ctx.fillStyle = '#10B981'
-      ctx.fillText(`Gaze: ${eyeGazeData.gazeDirection}`, 10, 24)
-    }
+    // Add confidence indicator
+    ctx.fillStyle = '#10B981';
+    ctx.fillText(`Confidence: ${(eyeGazeData.confidence * 100).toFixed(1)}%`, 10, 20);
 
     // Draw hydration indicator if hydration analysis is selected
     if (selectedAnalysisTypes.includes('hydration') && hydrationData) {
-      drawHydrationIndicator(ctx, canvas)
+      drawHydrationIndicator(ctx, canvas);
     }
-  }
+  };
 
   // Add hydration level visualization
   const drawHydrationIndicator = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
@@ -390,70 +356,39 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
   // Update eye gaze data when analysis includes gaze detection
   useEffect(() => {
     if (latestAnalysis && selectedAnalysisTypes.includes('gaze')) {
-      try {
-        // Find the gaze analysis section in the latest analysis
-        const gazeSection = latestAnalysis.split('GAZE ANALYSIS:\n')[1]?.split('\n\n')[0]
-        if (!gazeSection) return
+      const processGazeData = async () => {
+        try {
+          if (!videoRef.current) return;
+          
+          const frameData = await captureVideoFrame(videoRef.current);
+          const gazeResult = await detectGaze(frameData);
+          
+          // Convert detection results to EyeGazeData format
+          const faces = gazeResult.objects.map((obj, index) => ({
+            x: obj.box.x1,
+            y: obj.box.y1,
+            width: obj.box.x2 - obj.box.x1,
+            height: obj.box.y2 - obj.box.y1,
+            eyePoints: gazeResult.points.slice(index * 2, (index * 2) + 2)
+          }));
 
-        // Parse the JSON response
-        const gazeData = JSON.parse(gazeSection)
-        
-        // Get video dimensions
-        const video = videoRef.current
-        if (!video) return
-        const videoRect = video.getBoundingClientRect()
+          setEyeGazeData({
+            gazeDirection: 'Analyzing gaze direction...',
+            faces,
+            confidence: Math.min(...gazeResult.objects.map(obj => obj.confidence))
+          });
 
-        // Convert relative positions to pixel coordinates
-        const faces = gazeData.faces.map((face: any, index: number) => {
-          // Calculate face box dimensions (adjust these values as needed)
-          const width = videoRect.width * 0.2 // 20% of video width
-          const height = width // Square boxes
+        } catch (error) {
+          console.error('Error processing gaze data:', error);
+          setEyeGazeData(null);
+        }
+      };
 
-          // Calculate position based on relative position description
-          let x = 0
-          let y = videoRect.height * 0.2 // 20% from top
-
-          switch (face.position.toLowerCase()) {
-            case 'left':
-              x = videoRect.width * 0.2
-              break
-            case 'center':
-              x = (videoRect.width - width) / 2
-              break
-            case 'right':
-              x = videoRect.width * 0.8 - width
-              break
-            // Add more position cases as needed
-          }
-
-          return {
-            x,
-            y,
-            width,
-            height
-          }
-        })
-
-        // Create connections based on gaze patterns
-        const connections = gazeData.connections.map((conn: any) => ({
-          from: conn.from,
-          to: conn.to,
-          color: conn.type === 'mutual_gaze' ? '#10B981' : '#6B7280'
-        }))
-
-        setEyeGazeData({
-          gazeDirection: gazeData.summary,
-          faces,
-          connections
-        })
-      } catch (error) {
-        console.error('Error parsing gaze data:', error)
-        setEyeGazeData(null)
-      }
+      processGazeData();
     } else {
-      setEyeGazeData(null)
+      setEyeGazeData(null);
     }
-  }, [latestAnalysis, selectedAnalysisTypes])
+  }, [latestAnalysis, selectedAnalysisTypes]);
 
   // Draw bounding boxes when eye gaze data updates or video size changes
   useEffect(() => {
@@ -490,19 +425,45 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
   useEffect(() => {
     if (latestAnalysis && selectedAnalysisTypes.includes('hydration')) {
       try {
-        const hydrationSection = latestAnalysis.split('HYDRATION ANALYSIS:\n')[1]?.split('\n\n')[0]
-        if (hydrationSection) {
-          const data = JSON.parse(hydrationSection)
-          setHydrationData(data)
+        // Find the hydration section in the analysis
+        const hydrationMatch = latestAnalysis.match(/HYDRATION ANALYSIS:\s*([\s\S]*?)(?=\n\n|\n?$)/);
+        if (hydrationMatch) {
+          const hydrationText = hydrationMatch[1];
+          
+          // Extract hydration level (assuming it's mentioned in format "X/10")
+          const levelMatch = hydrationText.match(/(\d+)\/10/);
+          const level = levelMatch ? parseInt(levelMatch[1]) : 5;
+
+          // Extract confidence level
+          let confidence: 'high' | 'medium' | 'low' = 'medium';
+          if (hydrationText.toLowerCase().includes('high confidence')) confidence = 'high';
+          if (hydrationText.toLowerCase().includes('low confidence')) confidence = 'low';
+
+          // Extract advice
+          const adviceMatch = hydrationText.match(/advice:?\s*(.*?)(?=\n|$)/i);
+          const advice = adviceMatch ? adviceMatch[1].trim() : 'No specific advice provided';
+
+          // Extract indicators
+          const indicators = hydrationText
+            .split('\n')
+            .filter(line => line.trim().startsWith('-') || line.trim().startsWith('•'))
+            .map(line => line.replace(/^[-•]\s*/, '').trim());
+
+          setHydrationData({
+            hydrationLevel: level,
+            confidence,
+            advice,
+            indicators
+          });
         }
       } catch (error) {
-        console.error('Error parsing hydration data:', error)
-        setHydrationData(null)
+        console.error('Error parsing hydration data:', error);
+        setHydrationData(null);
       }
     } else {
-      setHydrationData(null)
+      setHydrationData(null);
     }
-  }, [latestAnalysis, selectedAnalysisTypes])
+  }, [latestAnalysis, selectedAnalysisTypes]);
 
   return (
     <div className="w-full space-y-6">
@@ -559,6 +520,12 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
       </Card>
 
       <div className="grid grid-cols-1 gap-6">
+        <VideoUpload 
+          onFrame={onFrame}
+          isProcessing={isProcessing}
+          selectedAnalysisTypes={selectedAnalysisTypes}
+        />
+
         <Card className="relative overflow-hidden">
           <CardContent className="p-0">
             <div className="relative">
