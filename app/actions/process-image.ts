@@ -2,11 +2,11 @@
 
 import { ANALYSIS_PROMPTS } from '@/app/prompts/analysis-prompts'
 
-export type AnalysisType = 'emotion' | 'fatigue' | 'gender' | 'description' | 'accessories' | 'gaze' | 'hair' | 'crowd' | 'general' | 'hydration' | 'item_extraction' | 'text_detection'
+export type AnalysisType = 'emotion' | 'fatigue' | 'gender' | 'description' | 'accessories' | 'gaze' | 'hair' | 'crowd' | 'general' | 'hydration' | 'item_extraction' | 'text_detection' | 'video_motion' | 'video_scene' | 'video_speaking'
 
 // Cache for storing recent analysis results
 const analysisCache = new Map<string, { result: any; timestamp: number }>()
-const CACHE_DURATION = 5000 // 5 seconds cache duration
+const CACHE_DURATION = 3000 // 3 seconds cache duration
 
 // Helper function to generate a simple hash for the image data
 function generateImageHash(imageData: string): string {

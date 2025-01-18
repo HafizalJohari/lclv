@@ -3,9 +3,12 @@
 import { useState, useRef } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { AnalysisType } from '@/app/actions/process-image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, Upload, Play, Pause, RotateCcw, AlertCircle, Trash2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface ImageUploadProps {
   onAnalyze: (image: File, analysisTypes: AnalysisType[]) => void
@@ -24,7 +27,16 @@ const SUPPORTED_VIDEO_FORMATS = [
   'video/x-matroska' // .mkv
 ]
 
-const MAX_VIDEO_SIZE = 500 * 1024 * 1024 // 500MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50MB
+
+interface VideoQualityMetrics {
+  resolution: string;
+  bitrate: number;
+  stability: number;
+  sharpness: number;
+  rating: number;
+  feedback: string[];
+}
 
 export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -38,6 +50,26 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const frameIntervalRef = useRef<NodeJS.Timeout>()
+  const [videoQuality, setVideoQuality] = useState<VideoQualityMetrics | null>(null)
+  const [selectedVideoAnalysisTypes, setSelectedVideoAnalysisTypes] = useState<AnalysisType[]>(['general'])
+
+  const VIDEO_ANALYSIS_OPTIONS = [
+    { value: 'general' as AnalysisType, label: 'General Analysis', description: 'Overall scene and content analysis' },
+    { value: 'video_motion' as AnalysisType, label: 'Motion Analysis', description: 'Analyze movement patterns and activity' },
+    { value: 'video_scene' as AnalysisType, label: 'Scene Analysis', description: 'Analyze scene composition and transitions' },
+    { value: 'video_speaking' as AnalysisType, label: 'Speaking Analysis', description: 'Analyze speech and interactions' }
+  ]
+
+  const toggleVideoAnalysisType = (type: AnalysisType) => {
+    setSelectedVideoAnalysisTypes(prev => {
+      if (prev.includes(type)) {
+        // Don't remove if it's the last type
+        if (prev.length === 1) return prev
+        return prev.filter(t => t !== type)
+      }
+      return [...prev, type]
+    })
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -51,9 +83,42 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     }
   }
 
+  const analyzeVideoQuality = (video: HTMLVideoElement) => {
+    const width = video.videoWidth
+    const height = video.videoHeight
+    const resolution = `${width}x${height}`
+    
+    // Calculate metrics
+    const metrics: VideoQualityMetrics = {
+      resolution,
+      bitrate: 0, // Will be calculated during playback
+      stability: 0,
+      sharpness: 0,
+      rating: 0,
+      feedback: []
+    }
+
+    // Assess resolution quality
+    const totalPixels = width * height
+    if (totalPixels < 921600) { // Less than 720p
+      metrics.feedback.push('Low resolution - Recommend minimum 720p')
+      metrics.rating += 2
+    } else if (totalPixels < 2073600) { // Less than 1080p
+      metrics.feedback.push('Medium resolution - Good for most uses')
+      metrics.rating += 4
+    } else {
+      metrics.feedback.push('High resolution - Excellent quality')
+      metrics.rating += 5
+    }
+
+    // Set initial quality metrics
+    setVideoQuality(metrics)
+  }
+
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     setError(null)
+    setVideoQuality(null)
 
     if (!file) return
 
@@ -74,6 +139,11 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
       setIsPlaying(false)
       if (videoRef.current) {
         videoRef.current.src = url
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            analyzeVideoQuality(videoRef.current)
+          }
+        }
       }
     } catch (err) {
       setError('Error loading video. Please try another file.')
@@ -96,7 +166,7 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     canvas.toBlob((blob) => {
       if (blob) {
         const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' })
-        onAnalyze(file, ['general'])
+        onAnalyze(file, selectedVideoAnalysisTypes)
       }
     }, 'image/jpeg', 0.9)
   }
@@ -138,6 +208,7 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     setVideoUrl(null)
     setIsPlaying(false)
     setError(null)
+    setVideoQuality(null)
   }
 
   return (
@@ -301,10 +372,61 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
                 )}
               </div>
 
+              {/* Analysis Options */}
+              {videoUrl && (
+                <div className="grid grid-cols-2 gap-4">
+                  {VIDEO_ANALYSIS_OPTIONS.map((option) => (
+                    <div
+                      key={option.value}
+                      className={cn(
+                        "relative flex items-center space-x-2 rounded-lg border p-4 hover:bg-accent transition-colors",
+                        selectedVideoAnalysisTypes.includes(option.value) && "border-primary bg-accent"
+                      )}
+                    >
+                      <Checkbox
+                        id={option.value}
+                        checked={selectedVideoAnalysisTypes.includes(option.value)}
+                        onCheckedChange={() => toggleVideoAnalysisType(option.value)}
+                        disabled={selectedVideoAnalysisTypes.length === 1 && selectedVideoAnalysisTypes.includes(option.value)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      />
+                      <div className="grid gap-1.5">
+                        <label
+                          htmlFor={option.value}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {option.label}
+                        </label>
+                        <p className="text-sm text-muted-foreground">
+                          {option.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {error && (
                 <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
                   <AlertCircle className="w-4 h-4" />
                   {error}
+                </div>
+              )}
+
+              {videoQuality && (
+                <div className="space-y-2 p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Video Quality Analysis</h4>
+                    <Badge variant={videoQuality.rating >= 8 ? "secondary" : videoQuality.rating >= 5 ? "default" : "destructive"}>
+                      Rating: {videoQuality.rating}/10
+                    </Badge>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <p>Resolution: {videoQuality.resolution}</p>
+                    {videoQuality.feedback.map((feedback, index) => (
+                      <p key={index} className="text-muted-foreground">{feedback}</p>
+                    ))}
+                  </div>
                 </div>
               )}
 

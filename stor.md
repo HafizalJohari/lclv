@@ -24,7 +24,7 @@ The app can analyze various aspects of the video feed:
 
 ### 3. Technical Implementation
 - Uses Moondream AI model running locally via Ollama
-- Implements caching system for recent analyses (5-second cache)
+- Implements caching system for recent analyses (3-second cache)
 - Features retry mechanism with exponential backoff
 - Supports multiple face detection and tracking
 - Real-time visualization of gaze directions and connections
@@ -33,7 +33,7 @@ The app can analyze various aspects of the video feed:
 - Clean, modern interface using TailwindCSS
 - Responsive design that works across devices
 - Interactive controls for analysis type selection
-- Adjustable time intervals for analysis frequency
+- Adjustable time intervals for analysis frequency  
 - Real-time feedback and visualization overlays
 
 ### 5. Performance Features

@@ -43,23 +43,42 @@ Summarize the overall gaze patterns and interactions between people.`,
 
   crowd: 'Analyze the crowd or group in this image with short sentences. Provide: 1) Group Size: Exact count or estimate of people visible, 2) Demographics: Age ranges, gender distribution, and any notable diversity patterns, 3) Engagement Level: Rate overall group engagement (1-10) and describe interaction patterns, 4) Spatial Distribution: How people are positioned/grouped, 5) Behavioral Patterns: Common activities, attention focus, or shared behaviors, 6) Majority Demographic: Identify the predominant audience type (e.g., families, professionals, students). Include confidence level for each observation. Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the image. If any aspect cannot be determined clearly, state so.',
 
-  item_extraction: `Extract the following information from the image and format it as JSON:
-  {
-    "items": [
-      {
-        "name": "Name or description of the item",
-        "quantity": "Number of items (if applicable)",
-        "price": "Price in any format (if shown)",
-        "details": "Any additional details about the item",
-        "location": "Where the item appears in the image"
-      }
-    ]
-  }
+  item_extraction: `Extract the following information from the image and show any relevant information in the image. Provide a detailed and precise description of the data or numbers that are clearly visible in the image. explain in long sentences.
   
   Avoid pareidolia. Do not hallucinate or make up information that is not present in the image. If any information is unclear or not visible, return null for that field.`,
 
   text_detection: `Analyze and extract all text and numbers visible in the image, you only focus on text or numbers, Only return the text and numbers that are clearly visible in the image, if there is no text or numbers, return as NO TEXT OR NUMBERS FOUND.
 
 Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the image. If any feature is unclear or not visible, state that it cannot be determined.
-`
+`,
+
+  video_motion: `Analyze motion and activity in this frame. Provide:
+1. Movement Detection: Identify and describe any motion or movement
+2. Gesture Analysis: Describe any specific gestures or actions
+3. Activity Level: Rate the overall activity level (1-10)
+4. Motion Patterns: Identify any repeated or significant movement patterns
+5. Direction of Movement: Describe the primary direction(s) of motion
+6. Speed Assessment: Rate the speed of movements (slow/medium/fast)
+
+Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If any aspect cannot be determined clearly, state so.`,
+
+  video_scene: `Analyze the scene composition and transitions in this frame. Provide:
+1. Scene Type: Identify the type of scene (indoor/outdoor, setting type)
+2. Composition: Describe the layout and arrangement of elements
+3. Lighting Conditions: Analyze lighting quality and sources
+4. Scene Stability: Note any camera movement or scene changes
+5. Visual Elements: List key visual elements in the scene
+6. Scene Context: Provide context about the scene's purpose or setting
+
+Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If any aspect cannot be determined clearly, state so.`,
+
+  video_speaking: `Analyze speech and vocal interactions in this frame. Provide:
+1. Speaker Identification: Identify who appears to be speaking
+2. Speech Activity: Note visible signs of speech (moving lips, gestures)
+3. Interaction Type: Describe the type of verbal interaction
+4. Speaking Patterns: Note any visible speech patterns or emphasis
+5. Non-verbal Cues: Identify supporting gestures or expressions
+6. Group Communication: Note any visible turn-taking or group dynamics
+
+Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If any aspect cannot be determined clearly, state so.`
 } 
