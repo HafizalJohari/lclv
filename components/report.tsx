@@ -4,6 +4,7 @@ import { AnalysisType } from '@/app/actions/process-image'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, AlertCircle, Clock } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { SkeletonLoader } from '@/components/ui/skeleton-loader'
 
 interface Report {
   analysis: string
@@ -15,6 +16,7 @@ interface Report {
 
 interface ReportProps {
   reports: Report[]
+  isProcessing: boolean
 }
 
 const ANALYSIS_LABELS = {
@@ -28,7 +30,11 @@ const ANALYSIS_LABELS = {
   gaze: 'Gaze Detection',
   hair: 'Hair Analysis',
   crowd: 'Crowd Analysis',
-  text_detection: 'Character Detection'
+  text_detection: 'Character Detection',
+  video_motion: 'Motion Analysis',
+  video_scene: 'Scene Analysis',
+  video_speaking: 'Speaking Analysis',
+  item_extraction: 'Item Extraction'
 } as const
 
 const ANALYSIS_COLORS = {
@@ -42,79 +48,65 @@ const ANALYSIS_COLORS = {
   gaze: 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20',
   hair: 'bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20',
   crowd: 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20',
-  text_detection: 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20'
+  text_detection: 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20',
+  video_motion: 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20',
+  video_scene: 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20',
+  video_speaking: 'bg-violet-500/10 text-violet-500 hover:bg-violet-500/20',
+  item_extraction: 'bg-teal-500/10 text-teal-500 hover:bg-teal-500/20'
 } as const
 
-function CurrentTime() {
-  const [time, setTime] = useState<string>('')
-
-  useEffect(() => {
-    // Set initial time
-    setTime(new Date().toLocaleTimeString())
-    
-    // Update time every second
-    const timer = setInterval(() => {
-      setTime(new Date().toLocaleTimeString())
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  return time
-}
-
-export function ReportComponent({ reports }: ReportProps) {
+export function Report({ reports, isProcessing }: ReportProps) {
   return (
-    <Card className="w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-xl font-bold">Analysis Reports</CardTitle>
-        <Badge variant="outline" className="font-mono">
-          <Clock className="w-3 h-3 mr-1" />
-          <CurrentTime />
-        </Badge>
+        <Clock className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4">
-            {reports.map((report, index) => (
-              <Card 
-                key={index} 
-                className={`transition-all hover:shadow-md ${
-                  report.success 
-                    ? 'border-l-4 border-l-green-500 dark:border-l-green-400' 
-                    : 'border-l-4 border-l-red-500 dark:border-l-red-400'
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Badge 
-                          variant="secondary" 
-                          className={ANALYSIS_COLORS[report.analysisType as keyof typeof ANALYSIS_COLORS]}
-                        >
-                          {ANALYSIS_LABELS[report.analysisType as keyof typeof ANALYSIS_LABELS]}
-                        </Badge>
-                        {report.success ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" />
-                        ) : (
-                          <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400" />
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(report.timestamp).toLocaleTimeString()}
-                      </span>
+          {isProcessing ? (
+            <SkeletonLoader variant="analysis" count={2} />
+          ) : reports.length > 0 ? (
+            <div className="space-y-4">
+              {reports.map((report, index) => (
+                <div
+                  key={index}
+                  className="space-y-2 rounded-lg border bg-card p-4 text-card-foreground shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {report.success ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-destructive" />
+                      )}
+                      <h3 className="font-semibold">
+                        {ANALYSIS_LABELS[report.analysisType]}
+                      </h3>
                     </div>
-                    <div className={`text-sm whitespace-pre-line ${
-                      report.success ? '' : 'text-red-500 dark:text-red-400'
-                    }`}>
-                      {report.success ? report.analysis : report.error}
-                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={ANALYSIS_COLORS[report.analysisType]}
+                    >
+                      {new Date(report.timestamp).toLocaleTimeString()}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {report.success ? report.analysis : report.error}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-[500px] items-center justify-center text-center">
+              <div className="max-w-[420px] space-y-2">
+                <h3 className="text-lg font-medium">No analysis reports</h3>
+                <p className="text-sm text-muted-foreground">
+                  Upload an image or video and start analysis to see the results here.
+                </p>
+              </div>
+            </div>
+          )}
         </ScrollArea>
       </CardContent>
     </Card>

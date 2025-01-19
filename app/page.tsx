@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { CameraComponent } from '@/components/camera'
-import { ReportComponent } from '@/components/report'
+import { Report } from '@/components/report'
 import { InfoSection } from '@/components/info-section'
 import { ImageUpload } from '@/components/image-upload'
 import { processImageWithMultipleTypes, AnalysisType } from './actions/process-image'
@@ -97,7 +97,7 @@ export default function Home() {
           </div>
           
           <div className="space-y-6">
-            <ReportComponent reports={reports} />
+            <Report reports={reports} isProcessing={isProcessing} />
           </div>
         </div>
         <InfoSection />

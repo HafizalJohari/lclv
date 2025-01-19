@@ -374,77 +374,81 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
 
               {/* Analysis Options */}
               {videoUrl && (
-                <div className="grid grid-cols-2 gap-4">
-                  {VIDEO_ANALYSIS_OPTIONS.map((option) => (
-                    <div
-                      key={option.value}
-                      className={cn(
-                        "relative flex items-center space-x-2 rounded-lg border p-4 hover:bg-accent transition-colors",
-                        selectedVideoAnalysisTypes.includes(option.value) && "border-primary bg-accent"
-                      )}
-                    >
-                      <Checkbox
-                        id={option.value}
-                        checked={selectedVideoAnalysisTypes.includes(option.value)}
-                        onCheckedChange={() => toggleVideoAnalysisType(option.value)}
-                        disabled={selectedVideoAnalysisTypes.length === 1 && selectedVideoAnalysisTypes.includes(option.value)}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                      />
-                      <div className="grid gap-1.5">
-                        <label
-                          htmlFor={option.value}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {option.label}
-                        </label>
-                        <p className="text-sm text-muted-foreground">
-                          {option.description}
-                        </p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {VIDEO_ANALYSIS_OPTIONS.map((option) => (
+                      <div
+                        key={option.value}
+                        className={cn(
+                          "relative flex items-center space-x-2 rounded-lg border p-4 hover:bg-accent transition-colors",
+                          selectedVideoAnalysisTypes.includes(option.value) && "border-primary bg-accent"
+                        )}
+                      >
+                        <Checkbox
+                          id={option.value}
+                          checked={selectedVideoAnalysisTypes.includes(option.value)}
+                          onCheckedChange={() => toggleVideoAnalysisType(option.value)}
+                          disabled={selectedVideoAnalysisTypes.length === 1 && selectedVideoAnalysisTypes.includes(option.value)}
+                          className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                        />
+                        <div className="grid gap-1.5">
+                          <label
+                            htmlFor={option.value}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {option.label}
+                          </label>
+                          <p className="text-sm text-muted-foreground">
+                            {option.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
-                </div>
-              )}
-
-              {videoQuality && (
-                <div className="space-y-2 p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Video Quality Analysis</h4>
-                    <Badge variant={videoQuality.rating >= 8 ? "secondary" : videoQuality.rating >= 5 ? "default" : "destructive"}>
-                      Rating: {videoQuality.rating}/10
-                    </Badge>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <p>Resolution: {videoQuality.resolution}</p>
-                    {videoQuality.feedback.map((feedback, index) => (
-                      <p key={index} className="text-muted-foreground">{feedback}</p>
                     ))}
                   </div>
-                </div>
-              )}
 
-              {videoUrl && (
-                <div className="relative rounded-lg overflow-hidden bg-black aspect-video">
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full"
-                    onEnded={() => setIsPlaying(false)}
-                    onError={() => setError('Error playing video. Format might not be supported.')}
-                  >
-                    <source src={videoUrl} />
-                    Your browser does not support the video tag.
-                  </video>
-                  <canvas
-                    ref={canvasRef}
-                    className="hidden"
-                  />
+                  {error && (
+                    <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                      <AlertCircle className="w-4 h-4" />
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Video Quality Analysis */}
+                  {videoUrl && videoQuality && (
+                    <div className="space-y-2 p-4 rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Video Quality Analysis</h4>
+                        <Badge variant={videoQuality.rating >= 8 ? "secondary" : videoQuality.rating >= 5 ? "default" : "destructive"}>
+                          Rating: {videoQuality.rating}/10
+                        </Badge>
+                      </div>
+                      <div className="text-sm space-y-1">
+                        <p>Resolution: {videoQuality.resolution}</p>
+                        {videoQuality.feedback.map((feedback, index) => (
+                          <p key={index} className="text-muted-foreground">{feedback}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Video Player */}
+                  {videoUrl && (
+                    <div className="relative rounded-lg overflow-hidden bg-black aspect-video">
+                      <video
+                        ref={videoRef}
+                        className="w-full h-full"
+                        onEnded={() => setIsPlaying(false)}
+                        onError={() => setError('Error playing video. Format might not be supported.')}
+                      >
+                        <source src={videoUrl} />
+                        Your browser does not support the video tag.
+                      </video>
+                      <canvas
+                        ref={canvasRef}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
