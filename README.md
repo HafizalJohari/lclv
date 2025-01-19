@@ -1,4 +1,4 @@
-# Local Computer Vision (LCLV) Project
+# Local Computer Vision (LCLV) with Moondream
 
 This project is a real-time computer vision application built with Typescript, Next.js and TailwindCSS that leverages the Moondream AI model for advanced visual analysis. Here's how it works:
 
