@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +9,7 @@ import { AnalysisType } from '@/app/actions/process-image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, Upload, Play, Pause, RotateCcw, AlertCircle, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { MotionTracker } from '@/lib/motion-tracker'
 
 interface ImageUploadProps {
   onAnalyze: (image: File, analysisTypes: AnalysisType[]) => void
@@ -38,6 +39,15 @@ interface VideoQualityMetrics {
   feedback: string[];
 }
 
+// Frame buffer configuration
+const FRAME_BUFFER_SIZE = 3 // Number of frames to collect before analysis
+const FRAME_INTERVAL = 1000 // Capture frame every 1 second
+
+interface FrameBuffer {
+  timestamp: number
+  data: string
+}
+
 export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -52,6 +62,21 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
   const frameIntervalRef = useRef<NodeJS.Timeout>()
   const [videoQuality, setVideoQuality] = useState<VideoQualityMetrics | null>(null)
   const [selectedVideoAnalysisTypes, setSelectedVideoAnalysisTypes] = useState<AnalysisType[]>(['general'])
+  const [frameBuffer, setFrameBuffer] = useState<FrameBuffer[]>([])
+  const frameBufferRef = useRef<FrameBuffer[]>([])
+  const motionTrackerRef = useRef<MotionTracker>(new MotionTracker())
+  const [motionAnalysis, setMotionAnalysis] = useState<{
+    averageSpeed: number
+    maxSpeed: number
+    isMoving: boolean
+    dominantDirection: string
+    motionPattern: string
+  } | null>(null)
+
+  // Update frameBufferRef when frameBuffer changes
+  useEffect(() => {
+    frameBufferRef.current = frameBuffer
+  }, [frameBuffer])
 
   const VIDEO_ANALYSIS_OPTIONS = [
     { value: 'general' as AnalysisType, label: 'General Analysis', description: 'Overall scene and content analysis' },
@@ -151,6 +176,27 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     }
   }
 
+  const processFrameBuffer = () => {
+    if (frameBufferRef.current.length === 0) return
+
+    // Sort frames by timestamp to ensure order
+    const sortedFrames = [...frameBufferRef.current].sort((a, b) => a.timestamp - b.timestamp)
+    
+    // Use the most recent frame for analysis
+    const latestFrame = sortedFrames[sortedFrames.length - 1]
+    
+    // Convert base64 to File
+    fetch(latestFrame.data)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' })
+        onAnalyze(file, selectedVideoAnalysisTypes)
+      })
+
+    // Clear the buffer
+    setFrameBuffer([])
+  }
+
   const captureFrame = () => {
     const video = videoRef.current
     const canvas = canvasRef.current
@@ -163,12 +209,38 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     canvas.height = video.videoHeight
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' })
-        onAnalyze(file, selectedVideoAnalysisTypes)
+    // Get center point of the frame for motion tracking
+    const centerX = canvas.width / 2
+    const centerY = canvas.height / 2
+
+    // Track motion
+    if (selectedVideoAnalysisTypes.includes('video_motion')) {
+      const motionData = motionTrackerRef.current.track(
+        { x: centerX, y: centerY },
+        Date.now()
+      )
+
+      // Analyze motion patterns
+      const analysis = motionTrackerRef.current.analyzeMotion()
+      setMotionAnalysis(analysis)
+    }
+
+    // Add frame to buffer
+    const frameData = canvas.toDataURL('image/jpeg', 0.9)
+    const newFrame: FrameBuffer = {
+      timestamp: Date.now(),
+      data: frameData
+    }
+
+    setFrameBuffer(prev => {
+      const updated = [...prev, newFrame].slice(-FRAME_BUFFER_SIZE)
+      
+      if (updated.length === FRAME_BUFFER_SIZE) {
+        setTimeout(() => processFrameBuffer(), 0)
       }
-    }, 'image/jpeg', 0.9)
+      
+      return updated
+    })
   }
 
   const togglePlayback = () => {
@@ -180,9 +252,14 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
       if (frameIntervalRef.current) {
         clearInterval(frameIntervalRef.current)
       }
+      if (frameBufferRef.current.length > 0) {
+        processFrameBuffer()
+      }
     } else {
       video.play()
-      frameIntervalRef.current = setInterval(captureFrame, 1000)
+      setFrameBuffer([])
+      motionTrackerRef.current.reset() // Reset motion tracker
+      frameIntervalRef.current = setInterval(captureFrame, FRAME_INTERVAL)
     }
     setIsPlaying(!isPlaying)
   }
@@ -196,6 +273,9 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     if (frameIntervalRef.current) {
       clearInterval(frameIntervalRef.current)
     }
+    setFrameBuffer([])
+    motionTrackerRef.current.reset()
+    setMotionAnalysis(null)
   }
 
   const cleanup = () => {
@@ -209,6 +289,9 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     setIsPlaying(false)
     setError(null)
     setVideoQuality(null)
+    setFrameBuffer([])
+    motionTrackerRef.current.reset()
+    setMotionAnalysis(null)
   }
 
   return (
@@ -427,6 +510,24 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
                         {videoQuality.feedback.map((feedback, index) => (
                           <p key={index} className="text-muted-foreground">{feedback}</p>
                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Motion Analysis Results */}
+                  {motionAnalysis && selectedVideoAnalysisTypes.includes('video_motion') && (
+                    <div className="space-y-2 p-4 rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Motion Analysis</h4>
+                        <Badge variant={motionAnalysis.isMoving ? "secondary" : "default"}>
+                          {motionAnalysis.isMoving ? 'Moving' : 'Static'}
+                        </Badge>
+                      </div>
+                      <div className="text-sm space-y-1">
+                        <p>Pattern: {motionAnalysis.motionPattern}</p>
+                        <p>Direction: {motionAnalysis.dominantDirection}</p>
+                        <p>Average Speed: {motionAnalysis.averageSpeed.toFixed(2)} px/s</p>
+                        <p>Max Speed: {motionAnalysis.maxSpeed.toFixed(2)} px/s</p>
                       </div>
                     </div>
                   )}
