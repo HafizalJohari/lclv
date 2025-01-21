@@ -73,8 +73,7 @@ https://github.com/vikhyat/moondream.git
 ### Installation Steps
 
 1. First, pull the Moondream model using Ollama:
-2. `ollama pull moondream`
-3. `ollama run moondream`
+2. 'ollama run moondream`
 
 Make sure you run moondrean in ollama locally.
 
