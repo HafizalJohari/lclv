@@ -51,6 +51,10 @@ The app can analyze various aspects of the video feed:
 - No data sent to external servers
 - No image storage or persistence
 
+
+  [![Tonton Video](https://img.youtube.com/vi/Ivwgdj0K0_8/maxresdefault.jpg)](https://youtu.be/Ivwgdj0K0_8)
+    Demo Video
+
 ## How It Works
 
 1. The camera feed is captured using the `getUserMedia` API
