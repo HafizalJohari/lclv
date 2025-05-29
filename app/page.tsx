@@ -34,12 +34,12 @@ export default function Home() {
   const [latestAnalysis, setLatestAnalysis] = useState<string>('')
   const { selectedProvider } = useVisionProvider()
 
-  const handleAnalysis = async (imageData: string, analysisTypes: AnalysisType[]) => {
+  const handleAnalysis = async (imageData: string, analysisTypes: AnalysisType[], customPrompt?: string) => {
     if (isProcessing) return
     setIsProcessing(true)
 
     try {
-      const results = await processImageWithUserSelectionMultipleTypes(imageData, analysisTypes, selectedProvider)
+      const results = await processImageWithUserSelectionMultipleTypes(imageData, analysisTypes, selectedProvider, customPrompt)
       const newReports = Object.entries(results)
         .filter(([, result]) => (result as AnalysisResult).success)
         .map(([type, result]) => ({

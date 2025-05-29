@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Camera, StopCircle, Loader2, Clock, AlertCircle, Eye } from 'lucide-react'
+import { Camera, StopCircle, Loader2, Clock, AlertCircle, Eye, MessageSquare } from 'lucide-react'
 import { captureVideoFrame } from '@/utils/camera'
 import type { AnalysisType } from '@/app/actions/process-image'
 import {
@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { detectGaze } from '@/app/utils/gaze-detection'
 import { VideoUpload } from '@/components/video-upload'
 import { toast } from 'sonner'
 
 interface CameraProps {
-  onFrame: (imageData: string, analysisTypes: AnalysisType[]) => void
+  onFrame: (imageData: string, analysisTypes: AnalysisType[], customPrompt?: string) => void
   isProcessing: boolean
   latestAnalysis?: string
 }
@@ -135,6 +136,8 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 })
   const [hydrationData, setHydrationData] = useState<HydrationData | null>(null)
   const [lastGestureResponse, setLastGestureResponse] = useState<string | null>(null)
+  const [customPrompt, setCustomPrompt] = useState<string>('')
+  const [useCustomOnly, setUseCustomOnly] = useState<boolean>(true)
 
   // Handle video metadata loaded
   const handleVideoLoad = () => {
@@ -198,12 +201,38 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
     })
   }
 
+  // Wrapper function for VideoUpload to include custom prompt
+  const handleVideoFrame = (imageData: string, analysisTypes: AnalysisType[]) => {
+    if (useCustomOnly && customPrompt.trim()) {
+      // Only use custom analysis when custom-only mode is enabled and prompt is provided
+      onFrame(imageData, ['custom'], customPrompt)
+    } else if (useCustomOnly && !customPrompt.trim()) {
+      // Show error or fallback when custom-only is enabled but no prompt provided
+      console.warn('Custom-only mode enabled but no custom prompt provided')
+      return
+    } else {
+      // Normal mode - use selected analysis types and optional custom prompt
+      onFrame(imageData, analysisTypes, customPrompt || undefined)
+    }
+  }
+
   // Function to process frame for live feedback
   const processFrame = async () => {
     if (videoRef.current && isStreaming && !isProcessing) {
       try {
         const frameData = await captureVideoFrame(videoRef.current)
-        onFrame(frameData, selectedAnalysisTypes)
+        
+        if (useCustomOnly && customPrompt.trim()) {
+          // Only use custom analysis when custom-only mode is enabled and prompt is provided
+          onFrame(frameData, ['custom'], customPrompt)
+        } else if (useCustomOnly && !customPrompt.trim()) {
+          // Skip processing when custom-only is enabled but no prompt provided
+          console.warn('Custom-only mode enabled but no custom prompt provided')
+          return
+        } else {
+          // Normal mode - use selected analysis types and optional custom prompt
+          onFrame(frameData, selectedAnalysisTypes, customPrompt || undefined)
+        }
       } catch (error) {
         console.error('Error capturing frame:', error)
         setError('Failed to capture video frame')
@@ -228,7 +257,18 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
           if (videoRef.current) {
             try {
               const frameData = await captureVideoFrame(videoRef.current)
-              onFrame(frameData, selectedAnalysisTypes)
+              
+              if (useCustomOnly && customPrompt.trim()) {
+                // Only use custom analysis when custom-only mode is enabled and prompt is provided
+                onFrame(frameData, ['custom'], customPrompt)
+              } else if (useCustomOnly && !customPrompt.trim()) {
+                // Skip processing when custom-only is enabled but no prompt provided
+                console.warn('Custom-only mode enabled but no custom prompt provided')
+                return
+              } else {
+                // Normal mode - use selected analysis types and optional custom prompt
+                onFrame(frameData, selectedAnalysisTypes, customPrompt || undefined)
+              }
             } catch (error) {
               console.error('Error capturing frame:', error)
               setError('Failed to capture video frame')
@@ -244,7 +284,7 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
         cancelAnimationFrame(frameRequestRef.current)
       }
     }
-  }, [isStreaming, isProcessing, onFrame, selectedAnalysisTypes, selectedInterval])
+  }, [isStreaming, isProcessing, onFrame, selectedAnalysisTypes, selectedInterval, customPrompt, useCustomOnly])
 
   useEffect(() => {
     return () => {
@@ -526,20 +566,30 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
               </Select>
             </div>
             
+            {useCustomOnly && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
+                <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Custom-only mode is active. The analysis options above are disabled.
+                </p>
+              </div>
+            )}
+            
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {ANALYSIS_OPTIONS.map((option) => (
                 <div
                   key={option.value}
                   className={cn(
                     "relative flex items-center space-x-2 rounded-lg border p-4 hover:bg-accent transition-colors",
-                    selectedAnalysisTypes.includes(option.value as AnalysisType) && "border-primary bg-accent"
+                    selectedAnalysisTypes.includes(option.value as AnalysisType) && "border-primary bg-accent",
+                    useCustomOnly && "opacity-50 pointer-events-none"
                   )}
                 >
                   <Checkbox
                     id={option.value}
                     checked={selectedAnalysisTypes.includes(option.value as AnalysisType)}
                     onCheckedChange={() => toggleAnalysisType(option.value as AnalysisType)}
-                    disabled={selectedAnalysisTypes.length === 1 && selectedAnalysisTypes.includes(option.value as AnalysisType)}
+                    disabled={selectedAnalysisTypes.length === 1 && selectedAnalysisTypes.includes(option.value as AnalysisType) || useCustomOnly}
                     className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
                   <label
@@ -551,13 +601,59 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
                 </div>
               ))}
             </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 p-3 rounded-lg border bg-card">
+                <Checkbox
+                  id="custom-only"
+                  checked={useCustomOnly}
+                  onCheckedChange={(checked) => setUseCustomOnly(checked === true)}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="custom-only"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Use Custom Analysis Only
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    When enabled, only custom analysis will be performed instead of the selected options above
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                  <label htmlFor="custom-prompt" className="text-sm font-medium">
+                    Custom Analysis Prompt {useCustomOnly && <span className="text-destructive">*</span>}
+                  </label>
+                </div>
+                <Input
+                  id="custom-prompt"
+                  type="text"
+                  placeholder={useCustomOnly ? "Enter your custom analysis prompt (required)" : "Describe what you want to analyze (optional)"}
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  className={`w-full ${useCustomOnly && !customPrompt.trim() ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                  required={useCustomOnly}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {useCustomOnly 
+                    ? "Required: Specify what you want to analyze when using custom-only mode."
+                    : "Optional: Specify any custom analysis you want beyond the selected options above."
+                  }
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 gap-6">
         <VideoUpload 
-          onFrame={onFrame}
+          onFrame={handleVideoFrame}
           isProcessing={isProcessing}
           selectedAnalysisTypes={selectedAnalysisTypes}
         />

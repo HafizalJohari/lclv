@@ -60,7 +60,12 @@ function getEndpointForAnalysisType(analysisType: AnalysisType): string {
 }
 
 // Get the appropriate prompt/question for the endpoint
-function getPromptForEndpoint(analysisType: AnalysisType, endpoint: string): string {
+function getPromptForEndpoint(analysisType: AnalysisType, endpoint: string, customPrompt?: string): string {
+  // If it's a custom analysis type and custom prompt is provided, use it
+  if (analysisType === 'custom' && customPrompt) {
+    return customPrompt
+  }
+  
   if (endpoint === 'caption') {
     return 'long' // Use long captions for detailed descriptions
   } else if (endpoint === 'detect') {
@@ -82,14 +87,15 @@ function getPromptForEndpoint(analysisType: AnalysisType, endpoint: string): str
 
 export async function processImageWithMoondreamLocal(
   imageData: string, 
-  analysisType: AnalysisType = 'emotion'
+  analysisType: AnalysisType = 'emotion',
+  customPrompt?: string
 ) {
   try {
     const baseUrl = process.env.MOONDREAM_LOCAL_URL || 'http://localhost:2020/v1'
     
     // Check cache first
     const imageHash = generateImageHash(imageData)
-    const cacheKey = `moondream-local-${imageHash}-${analysisType}`
+    const cacheKey = `moondream-local-${imageHash}-${analysisType}-${customPrompt || ''}`
     const cached = moondreamLocalCache.get(cacheKey)
     
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -100,7 +106,7 @@ export async function processImageWithMoondreamLocal(
     console.log('[Moondream Local] Attempting to process image...', { analysisType, baseUrl })
 
     const endpoint = getEndpointForAnalysisType(analysisType)
-    const prompt = getPromptForEndpoint(analysisType, endpoint)
+    const prompt = getPromptForEndpoint(analysisType, endpoint, customPrompt)
 
     const result = await retryWithBackoff(async () => {
       // Prepare the request body based on endpoint
@@ -229,13 +235,14 @@ export async function processImageWithMoondreamLocal(
 
 export async function processImageWithMoondreamLocalMultipleTypes(
   imageData: string,
-  analysisTypes: AnalysisType[] = ['emotion', 'fatigue', 'gender']
+  analysisTypes: AnalysisType[] = ['emotion', 'fatigue', 'gender'],
+  customPrompt?: string
 ) {
   try {
     console.log('[Moondream Local] Processing multiple analysis types:', analysisTypes)
     
     const results = await Promise.all(
-      analysisTypes.map(type => processImageWithMoondreamLocal(imageData, type))
+      analysisTypes.map(type => processImageWithMoondreamLocal(imageData, type, type === 'custom' ? customPrompt : undefined))
     )
 
     return results.reduce((acc, result, index) => {

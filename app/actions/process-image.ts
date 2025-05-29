@@ -5,7 +5,7 @@ import { processImageWithMoondream, processImageWithMoondreamMultipleTypes } fro
 import { processImageWithMoondreamLocal, processImageWithMoondreamLocalMultipleTypes } from '@/app/services/moondream-local'
 import { getVisionConfig, getBestProvider, VisionProvider } from '@/app/config/vision-providers'
 
-export type AnalysisType = 'emotion' | 'fatigue' | 'gender' | 'description' | 'accessories' | 'gaze' | 'hair' | 'crowd' | 'general' | 'hydration' | 'item_extraction' | 'text_detection' | 'video_motion' | 'video_scene' | 'video_speaking' | 'hand_gesture'
+export type AnalysisType = 'emotion' | 'fatigue' | 'gender' | 'description' | 'accessories' | 'gaze' | 'hair' | 'crowd' | 'general' | 'hydration' | 'item_extraction' | 'text_detection' | 'video_motion' | 'video_scene' | 'video_speaking' | 'hand_gesture' | 'custom'
 
 // Cache for storing recent analysis results
 const analysisCache = new Map<string, { result: any; timestamp: number }>()
@@ -30,13 +30,13 @@ async function retryWithBackoff(
   }
 }
 
-export async function processImageWithOllama(imageData: string, analysisType: AnalysisType = 'emotion') {
+export async function processImageWithOllama(imageData: string, analysisType: AnalysisType = 'emotion', customPrompt?: string) {
   try {
     const config = getVisionConfig()
     
     // Check cache first
     const imageHash = generateImageHash(imageData)
-    const cacheKey = `ollama-${imageHash}-${analysisType}`
+    const cacheKey = `ollama-${imageHash}-${analysisType}-${customPrompt || ''}`
     const cached = analysisCache.get(cacheKey)
     
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -46,6 +46,11 @@ export async function processImageWithOllama(imageData: string, analysisType: An
 
     console.log('[Ollama] Attempting to process image...', { analysisType })
 
+    // Use custom prompt if provided for 'custom' analysis type, otherwise use predefined prompts
+    const prompt = analysisType === 'custom' && customPrompt 
+      ? customPrompt 
+      : ANALYSIS_PROMPTS[analysisType]
+
     const result = await retryWithBackoff(async () => {
       const response = await fetch(`${config.ollama.baseUrl}/api/generate`, {
         method: 'POST',
@@ -54,7 +59,7 @@ export async function processImageWithOllama(imageData: string, analysisType: An
         },
         body: JSON.stringify({
           model: config.ollama.model,
-          prompt: ANALYSIS_PROMPTS[analysisType],
+          prompt: prompt,
           stream: false,
           images: [imageData.split(',')[1]], // Remove data URL prefix
         }),

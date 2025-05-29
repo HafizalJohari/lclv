@@ -106,7 +106,8 @@ export async function processImageWithUserSelection(
 export async function processImageWithUserSelectionMultipleTypes(
   imageData: string,
   analysisTypes: AnalysisType[] = ['emotion', 'fatigue', 'gender'],
-  userSelectedProvider?: VisionProvider
+  userSelectedProvider?: VisionProvider,
+  customPrompt?: string
 ) {
   try {
     const config = getVisionConfig()
@@ -134,10 +135,16 @@ export async function processImageWithUserSelectionMultipleTypes(
 
     console.log(`[Vision] Processing multiple analysis types with user-selected provider: ${primaryProvider}`, analysisTypes)
     
+    // Add custom analysis type if custom prompt is provided
+    let finalAnalysisTypes = [...analysisTypes]
+    if (customPrompt && customPrompt.trim()) {
+      finalAnalysisTypes.push('custom')
+    }
+    
     // Check if the selected provider is actually available
     const isAvailable = checkProviderAvailability(primaryProvider, config)
     if (!isAvailable) {
-      return analysisTypes.reduce((acc, type) => {
+      return finalAnalysisTypes.reduce((acc, type) => {
         acc[type] = {
           success: false,
           error: `Selected provider '${primaryProvider}' is not available or properly configured.`,
@@ -152,14 +159,14 @@ export async function processImageWithUserSelectionMultipleTypes(
     let results: any[]
     if (primaryProvider === 'ollama') {
       results = await Promise.all(
-        analysisTypes.map(type => processImageWithOllama(imageData, type))
+        finalAnalysisTypes.map(type => processImageWithOllama(imageData, type, type === 'custom' ? customPrompt : undefined))
       )
     } else if (primaryProvider === 'moondream') {
-      const moondreamResults = await processImageWithMoondreamMultipleTypes(imageData, analysisTypes)
-      results = analysisTypes.map(type => moondreamResults[type])
+      const moondreamResults = await processImageWithMoondreamMultipleTypes(imageData, finalAnalysisTypes, customPrompt)
+      results = finalAnalysisTypes.map(type => moondreamResults[type])
     } else if (primaryProvider === 'moondream_local') {
-      const moondreamLocalResults = await processImageWithMoondreamLocalMultipleTypes(imageData, analysisTypes)
-      results = analysisTypes.map(type => moondreamLocalResults[type])
+      const moondreamLocalResults = await processImageWithMoondreamLocalMultipleTypes(imageData, finalAnalysisTypes, customPrompt)
+      results = finalAnalysisTypes.map(type => moondreamLocalResults[type])
     } else {
       throw new Error(`Unknown provider: ${primaryProvider}`)
     }
@@ -183,18 +190,18 @@ export async function processImageWithUserSelectionMultipleTypes(
           
           console.warn(`[Vision] Some analyses failed with '${primaryProvider}', trying fallback '${fallbackProvider}' for ${stillFailedIndices.length} failed analyses`)
           
-          const failedTypes = stillFailedIndices.map(i => analysisTypes[i])
+          const failedTypes = stillFailedIndices.map(i => finalAnalysisTypes[i])
           let fallbackResults: any[]
           
           if (fallbackProvider === 'ollama') {
             fallbackResults = await Promise.all(
-              failedTypes.map(type => processImageWithOllama(imageData, type))
+              failedTypes.map(type => processImageWithOllama(imageData, type, type === 'custom' ? customPrompt : undefined))
             )
           } else if (fallbackProvider === 'moondream') {
-            const fallbackResultsObj = await processImageWithMoondreamMultipleTypes(imageData, failedTypes)
+            const fallbackResultsObj = await processImageWithMoondreamMultipleTypes(imageData, failedTypes, customPrompt)
             fallbackResults = failedTypes.map(type => fallbackResultsObj[type])
           } else if (fallbackProvider === 'moondream_local') {
-            const fallbackResultsObj = await processImageWithMoondreamLocalMultipleTypes(imageData, failedTypes)
+            const fallbackResultsObj = await processImageWithMoondreamLocalMultipleTypes(imageData, failedTypes, customPrompt)
             fallbackResults = failedTypes.map(type => fallbackResultsObj[type])
           } else {
             continue
@@ -203,7 +210,7 @@ export async function processImageWithUserSelectionMultipleTypes(
           stillFailedIndices.forEach((originalIndex, fallbackIndex) => {
             if (fallbackResults[fallbackIndex] && fallbackResults[fallbackIndex].success) {
               results[originalIndex] = fallbackResults[fallbackIndex]
-              console.log(`[Vision] Fallback successful for analysis type: ${analysisTypes[originalIndex]}`)
+              console.log(`[Vision] Fallback successful for analysis type: ${finalAnalysisTypes[originalIndex]}`)
             }
           })
         }
@@ -211,7 +218,7 @@ export async function processImageWithUserSelectionMultipleTypes(
     }
 
     return results.reduce((acc, result, index) => {
-      acc[analysisTypes[index]] = result
+      acc[finalAnalysisTypes[index]] = result
       return acc
     }, {} as Record<AnalysisType, any>)
   } catch (error) {

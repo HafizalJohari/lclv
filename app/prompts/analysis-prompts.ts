@@ -86,5 +86,7 @@ GESTURE: | wave | thumbs up | pointing | peace sign | fist bump | high five | th
 
 MEANING: Interpret the likely meaning of the gesture.
 
-Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If gestures cannot be determined clearly, state so.`
+Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If gestures cannot be determined clearly, state so.`,
+
+  custom: 'Analyze this image based on the user-provided instruction. Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the image. If any aspect cannot be determined clearly, state so.'
 } 
