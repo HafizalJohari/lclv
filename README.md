@@ -3,7 +3,7 @@
 This project is a real-time computer vision application built with Typescript, Next.js and TailwindCSS that leverages the Moondream AI model for advanced visual analysis. Here's how it works:
 
 
-![Screenshot 2025-01-17 at 8 38 10 AM](https://github.com/user-attachments/assets/193ff854-8130-4ff2-8751-96447c1b1fe3)
+![Screenshot 2025-01-17 at 8 38 10 AM](https://github.com/user-attachments/assets/193ff854-8130-4ff2-8751-96447c1b1fe3)
 
 
 ## Core Features
@@ -26,27 +26,50 @@ The app can analyze various aspects of the video feed:
 - **Hair Analysis**: Detailed hair characteristics assessment
 - **Crowd Analysis**: Group dynamics and demographic patterns
 
-### 3. Technical Implementation
+### 3. Moondream Station Capabilities
+The application leverages the powerful Moondream vision model which provides:
+
+- **Advanced Scene Understanding**: Deep comprehension of visual contexts and environments
+- **Multi-modal Analysis**: Combines visual perception with natural language understanding
+- **Real-time Processing**: Optimized for live video stream analysis with minimal latency
+- **Precise Object Detection**: Accurate identification and localization of objects, people, and features
+- **Contextual Reasoning**: Ability to understand relationships between elements in the scene
+- **Adaptive Analysis**: Dynamic adjustment to different lighting conditions and environments
+- **High Accuracy**: State-of-the-art computer vision performance for reliable results
+- **Local Processing**: Complete privacy with no cloud dependencies
+
+### 4. Dark Mode Support
+The application includes comprehensive dark mode functionality:
+
+- **Automatic Theme Detection**: Respects system-wide dark/light mode preferences
+- **Manual Toggle**: Users can manually switch between light and dark themes
+- **Consistent Styling**: All UI components adapt seamlessly to the selected theme
+- **Enhanced Visibility**: Optimized contrast ratios for better visibility in low-light conditions
+- **Canvas Overlays**: Analysis visualizations adapt to match the current theme
+- **Persistent Preference**: Theme selection is saved and restored across sessions
+- **Smooth Transitions**: Elegant theme switching animations for better user experience
+
+### 5. Technical Implementation
 - Uses Moondream AI model running locally via Ollama
 - Implements caching system for recent analyses (5-second cache)
 - Features retry mechanism with exponential backoff
 - Supports multiple face detection and tracking
 - Real-time visualization of gaze directions and connections
 
-### 4. User Interface
+### 6. User Interface
 - Clean, modern interface using TailwindCSS
 - Responsive design that works across devices
 - Interactive controls for analysis type selection
 - Adjustable time intervals for analysis frequency
 - Real-time feedback and visualization overlays
 
-### 5. Performance Features
+### 7. Performance Features
 - Efficient frame processing
 - Request debouncing to prevent overload
 - Smooth rendering using requestAnimationFrame
 - Automatic resizing and responsive canvas
 
-### 6. Privacy-Focused
+### 8. Privacy-Focused
 - All processing happens locally on the user's machine
 - No data sent to external servers
 - No image storage or persistence
