@@ -24,6 +24,7 @@ const analysisOptions: { label: string; value: AnalysisType }[] = [
   { label: "Hydration Analysis", value: "hydration" },
   { label: "Item Extraction", value: "item_extraction" },
   { label: "Character Detection", value: "text_detection" },
+  { label: "Hand Gesture Detection", value: "hand_gesture" },
 ]
 
 export function InfoSection() {
@@ -101,6 +102,11 @@ export function InfoSection() {
                   title: "Character Detection",
                   description: "Identifies and extracts text, numbers, and alphanumeric sequences from images",
                   color: "bg-teal-500/10 text-teal-500"
+                },
+                {
+                  title: "Hand Gesture Detection",
+                  description: "Detects and responds to hand gestures like, waves, and other common gestures",
+                  color: "bg-lime-500/10 text-lime-500"
                 }
               ].map((feature, index) => (
                 <div key={index} className="flex items-start gap-3 p-3 rounded-lg border bg-card">

@@ -34,7 +34,8 @@ const ANALYSIS_LABELS = {
   video_motion: 'Motion Analysis',
   video_scene: 'Scene Analysis',
   video_speaking: 'Speaking Analysis',
-  item_extraction: 'Item Extraction'
+  item_extraction: 'Item Extraction',
+  hand_gesture: 'Hand Gesture Analysis'
 } as const
 
 const ANALYSIS_COLORS = {
@@ -52,7 +53,8 @@ const ANALYSIS_COLORS = {
   video_motion: 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20',
   video_scene: 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20',
   video_speaking: 'bg-violet-500/10 text-violet-500 hover:bg-violet-500/20',
-  item_extraction: 'bg-teal-500/10 text-teal-500 hover:bg-teal-500/20'
+  item_extraction: 'bg-teal-500/10 text-teal-500 hover:bg-teal-500/20',
+  hand_gesture: 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
 } as const
 
 export function Report({ reports, isProcessing }: ReportProps) {

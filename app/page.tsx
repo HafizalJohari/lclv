@@ -5,8 +5,13 @@ import { CameraComponent } from '@/components/camera'
 import { Report } from '@/components/report'
 import { InfoSection } from '@/components/info-section'
 import { ImageUpload } from '@/components/image-upload'
-import { processImageWithMultipleTypes, AnalysisType } from './actions/process-image'
+import { processImageWithUserSelectionMultipleTypes } from './actions/process-image-with-selection'
+import { AnalysisType } from './actions/process-image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { VisionProviderSelector } from '@/components/vision-provider-selector'
+import { ProviderDemo } from '@/components/provider-demo'
+import { useVisionProvider } from '@/app/context/vision-provider-context'
 
 interface Report {
   analysis: string
@@ -27,15 +32,16 @@ export default function Home() {
   const [reports, setReports] = useState<Report[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [latestAnalysis, setLatestAnalysis] = useState<string>('')
+  const { selectedProvider } = useVisionProvider()
 
   const handleAnalysis = async (imageData: string, analysisTypes: AnalysisType[]) => {
     if (isProcessing) return
     setIsProcessing(true)
 
     try {
-      const results = await processImageWithMultipleTypes(imageData, analysisTypes)
+      const results = await processImageWithUserSelectionMultipleTypes(imageData, analysisTypes, selectedProvider)
       const newReports = Object.entries(results)
-        .filter(([_, result]) => (result as AnalysisResult).success)
+        .filter(([, result]) => (result as AnalysisResult).success)
         .map(([type, result]) => ({
           ...(result as AnalysisResult),
           analysisType: type as AnalysisType
@@ -58,10 +64,15 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-12">
-      <div className="z-10 max-w-5xl w-full items-center justify-between text-sm lg:flex">
-        <div className="text-center w-full mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">Local Computer Vision</h1>
-          <p className="text-lg text-muted-foreground mt-2">Real-time computer vision analysis powered by Moondream</p>
+      <div className="z-10 max-w-5xl w-full items-center justify-between text-sm">
+        <div className="flex justify-between items-start mb-8 w-full">
+          <div className="flex-1 text-center">
+            <h1 className="text-4xl font-bold tracking-tight">Local Computer Vision (LCLV)</h1>
+            <p className="text-lg text-muted-foreground mt-2">Real-time computer vision analysis powered by Moondream</p>
+          </div>
+          <div className="flex-shrink-0 ml-4">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
       
@@ -97,6 +108,8 @@ export default function Home() {
           </div>
           
           <div className="space-y-6">
+            <VisionProviderSelector />
+            <ProviderDemo />
             <Report reports={reports} isProcessing={isProcessing} />
           </div>
         </div>

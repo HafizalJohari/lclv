@@ -47,15 +47,12 @@ Summarize the overall gaze patterns and interactions between people.`,
   
   Avoid pareidolia. Do not hallucinate or make up information that is not present in the image. If any information is unclear or not visible, return null for that field.`,
 
-  text_detection: `Analyze and extract all text and numbers visible in the image, you only focus on text or numbers, Only return the text and numbers that are clearly visible in the image, if there is no text or numbers, return as NO TEXT OR NUMBERS FOUND.
-
-Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the image. If any feature is unclear or not visible, state that it cannot be determined.
-`,
+  text_detection: `Analyze and extract all text and numbers visible in the image, transfer amount : , Extract the Item name, quantity, and unit price in JSON.`,
 
   video_motion: `Analyze motion and activity in this frame. Provide:
 1. Movement Detection: Identify and describe any motion or movement
 2. Gesture Analysis: Describe any specific gestures or actions
-3. Activity Level: Rate the overall activity level (1-10)
+3. Activity Level: Rate the overall activity level (1-5)
 4. Motion Patterns: Identify any repeated or significant movement patterns
 5. Direction of Movement: Describe the primary direction(s) of motion
 6. Speed Assessment: Rate the speed of movements (slow/medium/fast)
@@ -80,5 +77,14 @@ Important: Avoid pareidolia. Do not hallucinate or make up information that is n
 5. Non-verbal Cues: Identify supporting gestures or expressions
 6. Group Communication: Note any visible turn-taking or group dynamics
 
-Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If any aspect cannot be determined clearly, state so.`
+Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If any aspect cannot be determined clearly, state so.`,
+
+  hand_gesture: `Analyze the overall scene in this image with short sentences. Focus on:
+
+Respond with a short sentence structured analysis:
+GESTURE: | wave | thumbs up | pointing | peace sign | fist bump | high five | thumbs down | shaka sign | clenched fist | finger snap | crossed fingers | salute | hand heart | air quotes
+
+MEANING: Interpret the likely meaning of the gesture.
+
+Important: Avoid pareidolia. Do not hallucinate or make up information that is not clearly visible in the frame. If gestures cannot be determined clearly, state so.`
 } 

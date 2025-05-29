@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from "react"
-import { useTheme } from "next-themes"
 
 interface SquaresProps {
   direction?: "right" | "left" | "up" | "down" | "diagonal"
@@ -27,7 +26,6 @@ export function Squares({
     x: number
     y: number
   } | null>(null)
-  const { theme } = useTheme()
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -36,8 +34,8 @@ export function Squares({
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Set canvas background based on theme
-    canvas.style.background = theme === 'dark' ? "#060606" : "#ffffff"
+    // Set canvas background
+    canvas.style.background = "#060606"
 
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth
@@ -84,8 +82,8 @@ export function Squares({
         canvas.height / 2,
         Math.sqrt(Math.pow(canvas.width, 2) + Math.pow(canvas.height, 2)) / 2,
       )
-      gradient.addColorStop(0, theme === 'dark' ? "rgba(6, 6, 6, 0)" : "rgba(255, 255, 255, 0)")
-      gradient.addColorStop(1, theme === 'dark' ? "#060606" : "#ffffff")
+      gradient.addColorStop(0, "rgba(6, 6, 6, 0)")
+      gradient.addColorStop(1, "#060606")
 
       ctx.fillStyle = gradient
       ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -163,7 +161,7 @@ export function Squares({
         cancelAnimationFrame(requestRef.current)
       }
     }
-  }, [direction, speed, borderColor, hoverFillColor, hoveredSquare, squareSize, theme])
+  }, [direction, speed, borderColor, hoverFillColor, hoveredSquare, squareSize])
 
   return (
     <canvas

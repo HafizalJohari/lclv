@@ -59,12 +59,13 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
   const [error, setError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const frameIntervalRef = useRef<NodeJS.Timeout>()
+  const animationFrameRef = useRef<number>()
   const [videoQuality, setVideoQuality] = useState<VideoQualityMetrics | null>(null)
   const [selectedVideoAnalysisTypes, setSelectedVideoAnalysisTypes] = useState<AnalysisType[]>(['general'])
   const [frameBuffer, setFrameBuffer] = useState<FrameBuffer[]>([])
   const frameBufferRef = useRef<FrameBuffer[]>([])
   const motionTrackerRef = useRef<MotionTracker>(new MotionTracker())
+  const lastProcessedTimeRef = useRef<number>(0)
   const [motionAnalysis, setMotionAnalysis] = useState<{
     averageSpeed: number
     maxSpeed: number
@@ -77,6 +78,15 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
   useEffect(() => {
     frameBufferRef.current = frameBuffer
   }, [frameBuffer])
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [])
 
   const VIDEO_ANALYSIS_OPTIONS = [
     { value: 'general' as AnalysisType, label: 'General Analysis', description: 'Overall scene and content analysis' },
@@ -200,10 +210,23 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
   const captureFrame = () => {
     const video = videoRef.current
     const canvas = canvasRef.current
-    if (!video || !canvas || video.paused || video.ended) return
+    if (!video || !canvas || video.paused || video.ended) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      return
+    }
 
     const context = canvas.getContext('2d')
     if (!context) return
+
+    // Ensure we're not processing frames too quickly
+    const currentTime = video.currentTime
+    if (currentTime === lastProcessedTimeRef.current) {
+      animationFrameRef.current = requestAnimationFrame(captureFrame)
+      return
+    }
+    lastProcessedTimeRef.current = currentTime
 
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
@@ -241,6 +264,9 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
       
       return updated
     })
+
+    // Continue capturing frames
+    animationFrameRef.current = requestAnimationFrame(captureFrame)
   }
 
   const togglePlayback = () => {
@@ -249,8 +275,8 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
 
     if (isPlaying) {
       video.pause()
-      if (frameIntervalRef.current) {
-        clearInterval(frameIntervalRef.current)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
       }
       if (frameBufferRef.current.length > 0) {
         processFrameBuffer()
@@ -259,7 +285,8 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
       video.play()
       setFrameBuffer([])
       motionTrackerRef.current.reset() // Reset motion tracker
-      frameIntervalRef.current = setInterval(captureFrame, FRAME_INTERVAL)
+      lastProcessedTimeRef.current = 0 // Reset last processed time
+      animationFrameRef.current = requestAnimationFrame(captureFrame)
     }
     setIsPlaying(!isPlaying)
   }
@@ -270,11 +297,12 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
       videoRef.current.pause()
     }
     setIsPlaying(false)
-    if (frameIntervalRef.current) {
-      clearInterval(frameIntervalRef.current)
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
     }
     setFrameBuffer([])
     motionTrackerRef.current.reset()
+    lastProcessedTimeRef.current = 0
     setMotionAnalysis(null)
   }
 
@@ -282,8 +310,8 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     if (videoUrl) {
       URL.revokeObjectURL(videoUrl)
     }
-    if (frameIntervalRef.current) {
-      clearInterval(frameIntervalRef.current)
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
     }
     setVideoUrl(null)
     setIsPlaying(false)
@@ -291,6 +319,7 @@ export function ImageUpload({ onAnalyze, isProcessing }: ImageUploadProps) {
     setVideoQuality(null)
     setFrameBuffer([])
     motionTrackerRef.current.reset()
+    lastProcessedTimeRef.current = 0
     setMotionAnalysis(null)
   }
 

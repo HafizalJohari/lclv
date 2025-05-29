@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload, Play, Pause, RotateCcw, AlertCircle } from 'lucide-react'
 import type { AnalysisType } from '@/app/actions/process-image'
@@ -31,7 +31,8 @@ export function VideoUpload({ onFrame, isProcessing, selectedAnalysisTypes }: Vi
   const [error, setError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const frameIntervalRef = useRef<NodeJS.Timeout>()
+  const animationFrameRef = useRef<number>()
+  const lastProcessedTimeRef = useRef<number>(0)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -68,10 +69,23 @@ export function VideoUpload({ onFrame, isProcessing, selectedAnalysisTypes }: Vi
   const captureFrame = () => {
     const video = videoRef.current
     const canvas = canvasRef.current
-    if (!video || !canvas || video.paused || video.ended) return
+    if (!video || !canvas || video.paused || video.ended) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      return
+    }
 
     const context = canvas.getContext('2d')
     if (!context) return
+
+    // Ensure we're not processing frames too quickly
+    const currentTime = video.currentTime
+    if (currentTime === lastProcessedTimeRef.current) {
+      animationFrameRef.current = requestAnimationFrame(captureFrame)
+      return
+    }
+    lastProcessedTimeRef.current = currentTime
 
     // Set canvas size to match video
     canvas.width = video.videoWidth
@@ -81,8 +95,11 @@ export function VideoUpload({ onFrame, isProcessing, selectedAnalysisTypes }: Vi
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
     // Convert to base64 and send for analysis
-    const frameData = canvas.toDataURL('image/jpeg', 0.9) // Added quality parameter
+    const frameData = canvas.toDataURL('image/jpeg', 0.9)
     onFrame(frameData, selectedAnalysisTypes)
+
+    // Continue capturing frames
+    animationFrameRef.current = requestAnimationFrame(captureFrame)
   }
 
   const togglePlayback = () => {
@@ -91,13 +108,13 @@ export function VideoUpload({ onFrame, isProcessing, selectedAnalysisTypes }: Vi
 
     if (isPlaying) {
       video.pause()
-      if (frameIntervalRef.current) {
-        clearInterval(frameIntervalRef.current)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
       }
     } else {
       video.play()
-      // Capture frames every 1 second while playing
-      frameIntervalRef.current = setInterval(captureFrame, 1000)
+      lastProcessedTimeRef.current = 0 // Reset last processed time
+      animationFrameRef.current = requestAnimationFrame(captureFrame)
     }
     setIsPlaying(!isPlaying)
   }
@@ -108,9 +125,10 @@ export function VideoUpload({ onFrame, isProcessing, selectedAnalysisTypes }: Vi
       videoRef.current.pause()
     }
     setIsPlaying(false)
-    if (frameIntervalRef.current) {
-      clearInterval(frameIntervalRef.current)
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
     }
+    lastProcessedTimeRef.current = 0
   }
 
   // Cleanup function
@@ -118,13 +136,26 @@ export function VideoUpload({ onFrame, isProcessing, selectedAnalysisTypes }: Vi
     if (videoUrl) {
       URL.revokeObjectURL(videoUrl)
     }
-    if (frameIntervalRef.current) {
-      clearInterval(frameIntervalRef.current)
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
     }
     setVideoUrl(null)
     setIsPlaying(false)
     setError(null)
+    lastProcessedTimeRef.current = 0
   }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl)
+      }
+    }
+  }, [videoUrl])
 
   return (
     <div className="space-y-4">

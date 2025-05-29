@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { detectGaze } from '@/app/utils/gaze-detection'
 import { VideoUpload } from '@/components/video-upload'
+import { toast } from 'sonner'
 
 interface CameraProps {
   onFrame: (imageData: string, analysisTypes: AnalysisType[]) => void
@@ -102,6 +103,11 @@ const ANALYSIS_OPTIONS = [
     value: 'text_detection',
     label: 'Character Detection',
     description: 'Detect and extract text, numbers, and characters from images'
+  },
+  {
+    value: 'hand_gesture',
+    label: 'Hand Gestures',
+    description: 'Detect and respond to hand gestures'
   }
 ] as const
 
@@ -128,6 +134,7 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
   const [eyeGazeData, setEyeGazeData] = useState<EyeGazeData | null>(null)
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 })
   const [hydrationData, setHydrationData] = useState<HydrationData | null>(null)
+  const [lastGestureResponse, setLastGestureResponse] = useState<string | null>(null)
 
   // Handle video metadata loaded
   const handleVideoLoad = () => {
@@ -464,6 +471,35 @@ export function CameraComponent({ onFrame, isProcessing, latestAnalysis }: Camer
       setHydrationData(null);
     }
   }, [latestAnalysis, selectedAnalysisTypes]);
+
+  // Add useEffect to handle gesture responses
+  useEffect(() => {
+    if (latestAnalysis && selectedAnalysisTypes.includes('hand_gesture')) {
+      try {
+        // Extract gesture response from analysis
+        const gestureMatch = latestAnalysis.match(/RESPONSE:\s*([^\n]+)/);
+        const gesture = gestureMatch?.[1]?.trim();
+        
+        if (gesture && gesture !== lastGestureResponse) {
+          setLastGestureResponse(gesture);
+          
+          // Show toast notification for the gesture response
+          toast(gesture, {
+            description: "Hand gesture detected",
+            duration: 3000
+          });
+
+          // Text-to-speech for the response (optional)
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(gesture);
+            window.speechSynthesis.speak(utterance);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing gesture response:', error);
+      }
+    }
+  }, [latestAnalysis, selectedAnalysisTypes, lastGestureResponse]);
 
   return (
     <div className="w-full space-y-6">
