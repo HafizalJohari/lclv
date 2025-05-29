@@ -25,8 +25,36 @@ The app can analyze various aspects of the video feed:
 - **Gaze Analysis**: Eye tracking and attention direction
 - **Hair Analysis**: Detailed hair characteristics assessment
 - **Crowd Analysis**: Group dynamics and demographic patterns
+- **Custom Analysis**: User-defined analysis prompts for specialized use cases
 
-### 3. Moondream Station Capabilities
+### 3. Custom Analysis Prompts ✨ **NEW FEATURE**
+The application now includes powerful custom analysis capabilities that allow users to define their own analysis prompts:
+
+- **Custom Prompt Input**: Text field for users to specify exactly what they want to analyze
+- **Custom-Only Mode**: Option to use only custom analysis, bypassing all predefined analysis types
+- **Flexible Analysis**: Analyze anything visible in the camera feed using natural language prompts
+- **Real-time Custom Analysis**: Custom prompts work with live camera feed and video uploads
+- **Cross-Provider Support**: Works with all supported vision providers (Ollama, Moondream, Moondream-local)
+
+#### How to Use Custom Analysis:
+1. **Enable Custom-Only Mode**: Check the "Use Custom Analysis Only" checkbox (enabled by default)
+2. **Enter Your Prompt**: Type your analysis request in the custom prompt field
+   - Example: "Count the number of people in the frame"
+   - Example: "Describe the lighting conditions and suggest camera settings"
+   - Example: "Identify any safety hazards in the workspace"
+   - Example: "Analyze the body language and suggest mood"
+3. **Start Analysis**: The system will use your custom prompt instead of predefined analysis types
+4. **Mixed Mode**: Uncheck custom-only mode to use both custom prompts and predefined analysis types
+
+#### Custom Analysis Examples:
+- **Educational**: "Explain what's happening in this scene for a 5-year-old"
+- **Professional**: "Identify any workplace safety issues or violations"
+- **Creative**: "Describe this scene as if writing a movie script"
+- **Technical**: "List all electronic devices visible and their approximate condition"
+- **Medical**: "Describe any visible signs of stress or fatigue"
+- **Security**: "Note any unusual objects or behaviors in the frame"
+
+### 4. Moondream Station Capabilities
 The application leverages the powerful Moondream vision model which provides:
 
 - **Advanced Scene Understanding**: Deep comprehension of visual contexts and environments
@@ -38,7 +66,7 @@ The application leverages the powerful Moondream vision model which provides:
 - **High Accuracy**: State-of-the-art computer vision performance for reliable results
 - **Local Processing**: Complete privacy with no cloud dependencies
 
-### 4. Dark Mode Support
+### 5. Dark Mode Support
 The application includes comprehensive dark mode functionality:
 
 - **Automatic Theme Detection**: Respects system-wide dark/light mode preferences
@@ -49,27 +77,27 @@ The application includes comprehensive dark mode functionality:
 - **Persistent Preference**: Theme selection is saved and restored across sessions
 - **Smooth Transitions**: Elegant theme switching animations for better user experience
 
-### 5. Technical Implementation
+### 6. Technical Implementation
 - Uses Moondream AI model running locally via Ollama
 - Implements caching system for recent analyses (5-second cache)
 - Features retry mechanism with exponential backoff
 - Supports multiple face detection and tracking
 - Real-time visualization of gaze directions and connections
 
-### 6. User Interface
+### 7. User Interface
 - Clean, modern interface using TailwindCSS
 - Responsive design that works across devices
 - Interactive controls for analysis type selection
 - Adjustable time intervals for analysis frequency
 - Real-time feedback and visualization overlays
 
-### 7. Performance Features
+### 8. Performance Features
 - Efficient frame processing
 - Request debouncing to prevent overload
 - Smooth rendering using requestAnimationFrame
 - Automatic resizing and responsive canvas
 
-### 8. Privacy-Focused
+### 9. Privacy-Focused
 - All processing happens locally on the user's machine
 - No data sent to external servers
 - No image storage or persistence
@@ -82,12 +110,14 @@ The application includes comprehensive dark mode functionality:
 
 1. The camera feed is captured using the `getUserMedia` API
 2. Frames are processed at the selected interval
-3. The image data is sent to the local Moondream model via Ollama
-4. Analysis results are processed and displayed in real-time
-5. Visual overlays are drawn on the canvas for features like gaze tracking
-6. Results can be interacted with through the UI
+3. **Analysis Selection**: Users can choose between predefined analysis types or create custom analysis prompts
+4. **Custom Analysis**: When custom prompts are provided, they are sent along with the image data to the vision model
+5. The image data and analysis instructions are sent to the local Moondream model via Ollama
+6. Analysis results are processed and displayed in real-time
+7. Visual overlays are drawn on the canvas for features like gaze tracking
+8. Results can be interacted with through the UI
 
-The application provides a comprehensive suite of computer vision analysis tools while maintaining privacy and performance by running everything locally on the user's machine.
+The application provides a comprehensive suite of computer vision analysis tools while maintaining privacy and performance by running everything locally on the user's machine. With the new custom analysis feature, users can now analyze any aspect of their video feed using natural language prompts.
 
 ## Installation Guide
 
@@ -212,6 +242,24 @@ Open your browser and navigate to `http://localhost:3000` to start using the Loc
 - Moondream Station: [https://moondream.ai/station](https://moondream.ai/station)
 - Moondream GitHub: [https://github.com/vikhyat/moondream](https://github.com/vikhyat/moondream)
 - Ollama: [https://ollama.ai](https://ollama.ai)
+
+## Changelog
+
+### v2.1.0 - Custom Analysis Prompts (Latest)
+- ✨ **NEW**: Added custom analysis prompt input field
+- ✨ **NEW**: "Use Custom Analysis Only" mode with checkbox (enabled by default)
+- ✨ **NEW**: Support for user-defined analysis prompts in natural language
+- 🔧 **IMPROVED**: All vision providers now support custom prompts (Ollama, Moondream, Moondream-local)
+- 🔧 **IMPROVED**: Visual indicators when custom-only mode is active
+- 🔧 **IMPROVED**: Enhanced UI with better user guidance and validation
+- 🔧 **IMPROVED**: Mixed mode support (custom + predefined analysis types)
+- 📱 **UI**: Added visual feedback for disabled analysis options in custom-only mode
+- 🎯 **FEATURE**: Real-time custom analysis with live camera feed
+- 🎯 **FEATURE**: Custom analysis support for video uploads
+
+### Previous Versions
+- v2.0.0 - Moondream Station support, dark mode, multiple analysis types
+- v1.0.0 - Initial release with basic computer vision analysis
 
 MIT License
 
