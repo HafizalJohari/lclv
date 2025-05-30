@@ -51,44 +51,39 @@ export function ProviderDemo() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">Provider Test</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm">Current Provider:</span>
-          <Badge variant="outline">
-            {getProviderDisplayName(selectedProvider)}
-          </Badge>
-        </div>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm">Current Provider:</span>
+        <Badge variant="outline">
+          {getProviderDisplayName(selectedProvider)}
+        </Badge>
+      </div>
 
-        <Button 
-          onClick={runQuickTest} 
-          disabled={testing}
-          size="sm"
-          className="w-full"
-        >
-          {testing ? 'Testing...' : 'Run Quick Test'}
-        </Button>
+      <Button 
+        onClick={runQuickTest} 
+        disabled={testing}
+        size="sm"
+        className="w-full"
+      >
+        {testing ? 'Testing...' : 'Run Quick Test'}
+      </Button>
 
-        {testResult && (
-          <div className="text-xs p-2 bg-muted rounded">
-            <div className={`font-medium ${testResult.success ? 'text-green-600' : 'text-red-600'}`}>
-              {testResult.success ? '✅ Success' : '❌ Failed'}
-            </div>
-            {testResult.error && (
-              <div className="text-red-600 mt-1">{testResult.error}</div>
-            )}
-            {testResult.analysis && (
-              <div className="mt-1 text-muted-foreground">{testResult.analysis.slice(0, 100)}...</div>
-            )}
-            <div className="text-xs text-muted-foreground mt-1">
-              Provider: {testResult.provider || selectedProvider}
-            </div>
+      {testResult && (
+        <div className="text-xs p-2 bg-muted rounded">
+          <div className={`font-medium ${testResult.success ? 'text-green-600' : 'text-red-600'}`}>
+            {testResult.success ? '✅ Success' : '❌ Failed'}
           </div>
-        )}
-      </CardContent>
-    </Card>
+          {testResult.error && (
+            <div className="text-red-600 mt-1">{testResult.error}</div>
+          )}
+          {testResult.analysis && (
+            <div className="mt-1 text-muted-foreground">{testResult.analysis.slice(0, 100)}...</div>
+          )}
+          <div className="text-xs text-muted-foreground mt-1">
+            Provider: {testResult.provider || selectedProvider}
+          </div>
+        </div>
+      )}
+    </div>
   )
 } 
